@@ -2,7 +2,7 @@ require_relative 'game_setup'
 require_relative 'players'
 require_relative 'game'
 
-require 'random_word_generator'
+require 'pry'
 
 intro_text = "How many players? Min: 1, Max: 5"
 
@@ -28,7 +28,7 @@ setup.num_players.times do |i|
     puts "What is player #{i+1}'s name?"
     name = gets.chomp
     result = setup.name_does_not_exist?(name)
-    @players_array = setup.put_name_in_array(name)
+    setup.put_name_in_array(name)
     if result == false
       puts "Name has already been taken"
     end
@@ -38,68 +38,46 @@ end
 puts
 puts "Okay, let's play!"
 
-players_class = Players.new(@players_array)
-random_word = RandomWordGenerator.word
+players_class = Players.new(setup.players_array)
 
-game = Game.new(random_word)
-user_guess = game.blankify
-correct_answer = game.answer
-input_valid = nil
-guess_array = Array.new
-while user_guess != correct_answer
-  user_guess.each do |char|
+game = Game.new(setup.random_word)
+
+while game.blank_array != game.answer_array
+  game.blank_array.each do |char|
     print char
   end
   puts
   shuffled_player = players_class.randomize
   print "#{shuffled_player}, guess a letter, or enter ! to solve the puzzle: "
   ans = gets.chomp.downcase
-  until input_valid
-    input_bool = game.input_validation?(ans)
-    if input_bool == false
-      puts "Please only a letter!"
-      ans = gets.chomp.downcase
-    else
-      input_valid = true
-    end
-  end
-  if ans == '!'
-    puts "What is your guess?"
-    player_guess = gets.chomp.downcase
-    player_guess = game.word_guess(player_guess)
-    if player_guess == true
+  result = game.letter_guess(ans)
+
+  if result == false
+    puts
+    puts "Please only guess a letter!"
+    puts "As punishment, we will skip your turn."
+  elsif ans == "!"
+    puts
+    puts "What is your guess, #{shuffled_player}?"
+    if game.word_guess(gets.chomp.downcase)
       break
     else
-      puts "Nope, sorry!"
+      puts "Nope, sorry! Next person!"
       next
     end
-  else
-    guess_array.each do |character|
-      while character == ans
-        puts "#{ans} has already been played, noob!"
-        print "#{shuffled_player}, guess a letter: "
-        input_valid = nil
-        ans = gets.chomp.downcase
-        until input_valid
-          input_bool = game.input_validation?(ans)
-          if input_bool == false
-            puts "Please only a letter!"
-            ans = gets.chomp.downcase
-          else
-            input_valid = true
-          end
-        end
-      end
-    end
-    guess_array << ans
-    found_bool = game.letter_guess(ans)
-    if found_bool == true
-      puts "We found #{ans}!"
-      user_guess = game.word_so_far_array
-    else
-      puts "Sorry, we did not find #{ans}!"
-    end
+  elsif result == nil
+    puts
+    puts 'That letter has already been guessed.'
+    puts "As punishment, your turn will be skipped."
+  elsif game.correct_letter == true
+    puts
+    puts "We found #{ans}!"
+  elsif game.correct_letter == false
+    puts
+    puts "Sorry, we did not find #{ans}."
   end
+  puts
+  puts "Letters guessed so far #{game.guess_array.join(', ')}."
   puts
 end
 puts "#{shuffled_player} wins! Congratulations!"

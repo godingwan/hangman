@@ -1,9 +1,12 @@
+require 'random_word_generator'
+
 class GameSetup
-  attr_accessor :players_array
+  attr_reader :players_array, :random_word, :number_of_players
 
   def initialize(number_of_players)
     @number_of_players = number_of_players
     @players_array = Array.new
+    @random_word = RandomWordGenerator.word
   end
 
   def num_players
